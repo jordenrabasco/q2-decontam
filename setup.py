@@ -12,7 +12,7 @@ import versioneer
 
 
 setup(
-    name="q2-dectontam",
+    name="q2-decontam",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     url="https://qiime2.org",
