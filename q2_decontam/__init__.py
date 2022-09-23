@@ -8,11 +8,11 @@
 
 from ._decontamination import denoise_single
 from ._version import get_versions
-from ._stats import DADA2Stats, DADA2StatsDirFmt, DADA2StatsFormat
+from ._stats import DecontamStats, DecontamStatsDirFmt, DecontamStatsFormat
 
 
 __version__ = get_versions()['version']
 del get_versions
 
 __all__ = ['denoise_single',
-           'DADA2Stats', 'DADA2StatsFormat', 'DADA2StatsDirFmt']
+           'DecontamStats', 'DecontamStatsFormat', 'DecontamStatsDirFmt']
