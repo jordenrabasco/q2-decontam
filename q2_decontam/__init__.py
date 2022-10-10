@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._decontamination import denoise_single
+from ._decontamination import contaminant_prevelance
 from ._version import get_versions
 from ._stats import DecontamStats, DecontamStatsDirFmt, DecontamStatsFormat
 
@@ -14,5 +14,5 @@ from ._stats import DecontamStats, DecontamStatsDirFmt, DecontamStatsFormat
 __version__ = get_versions()['version']
 del get_versions
 
-__all__ = ['denoise_single',
+__all__ = ['contaminant_prevelance',
            'DecontamStats', 'DecontamStatsFormat', 'DecontamStatsDirFmt']

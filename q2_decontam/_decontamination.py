@@ -18,11 +18,15 @@ import biom
 import skbio
 import qiime2.util
 import pandas as pd
+from qiime2.plugin import (Plugin, Int, Float, Range, Metadata, Str, Bool,
+                           Choices, MetadataColumn, Categorical, List,
+                           Citations, TypeMatch)
 
 from q2_types.feature_data import DNAIterator
 from q2_types.per_sample_sequences import (
     FastqGzFormat, SingleLanePerSampleSingleEndFastqDirFmt,
     SingleLanePerSamplePairedEndFastqDirFmt)
+from q2_types.feature_table import FeatureTable, Frequency
 
 
 def run_commands(cmds, verbose=True):
@@ -51,35 +55,16 @@ def _check_featureless_table(fp):
 
 _WHOLE_NUM = (lambda x: x >= 0, 'non-negative')
 _NAT_NUM = (lambda x: x > 0, 'greater than zero')
-_POOL_STR = (lambda x: x in {'pseudo', 'independent'},
-             'pseudo or independent')
-_CHIM_STR = (lambda x: x in {'pooled', 'consensus', 'none'},
-             'pooled, consensus or none')
+_CONTROL_STR = (lambda x: x in { 'column_name', 'column_number'},
+             'sample_name or column_name or column_number')
 _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
 # Better to choose to skip, than to implicitly ignore things that KeyError
 _SKIP = (lambda x: True, '')
 _valid_inputs = {
-    'trunc_len': _WHOLE_NUM,
-    'trim_left': _WHOLE_NUM,
-    'max_ee': _NAT_NUM,
-    'trunc_q': _WHOLE_NUM,
-    'min_overlap': _WHOLE_NUM,
-    'pooling_method': _POOL_STR,
-    'chimera_method': _CHIM_STR,
-    'min_fold_parent_over_abundance': _NAT_NUM,
-    'allow_one_off': _BOOLEAN,
-    'n_threads': _WHOLE_NUM,
-    # 0 is technically allowed, but we don't want to support it because it only
-    # takes all reads from the first sample (alphabetically by sample id)
-    'n_reads_learn': _NAT_NUM,
-    # Skipped because they are valid for whole domain of type
-    'hashed_feature_ids': _SKIP,
-    'demultiplexed_seqs': _SKIP,
-    'homopolymer_gap_penalty': _SKIP,
-    'band_size': _SKIP,
-    'front': _SKIP,
-    'adapter': _SKIP,
-    'indels': _SKIP,
+    'm_control_file': _SKIP,
+    'control_sample_id_method': _CONTROL_STR,
+    'control_column_id': _SKIP,
+    'control_sample_indicator': _SKIP,
 }
 
 
@@ -209,27 +194,40 @@ def _denoise_single(demultiplexed_seqs, trunc_len, trim_left, max_ee, trunc_q,
         return _denoise_helper(biom_fp, track_fp, hashed_feature_ids)
 
 
-def denoise_single(demultiplexed_seqs: SingleLanePerSampleSingleEndFastqDirFmt,
-                   trunc_len: int, trim_left: int = 0, max_ee: float = 2.0,
-                   trunc_q: int = 2, pooling_method: str = 'independent',
-                   chimera_method: str = 'consensus',
-                   min_fold_parent_over_abundance: float = 1.0,
-                   allow_one_off: bool = False,
-                   n_threads: int = 1, n_reads_learn: int = 1000000,
-                   hashed_feature_ids: bool = True
+def contaminant_prevelance(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata,
+                   control_sample_id_method: str='column_name', control_column_id: str = 'NULL',control_sample_indicator: str='NULL'
                    ) -> (biom.Table, DNAIterator, qiime2.Metadata):
-    return _denoise_single(
-        demultiplexed_seqs=demultiplexed_seqs,
-        trunc_len=trunc_len,
-        trim_left=trim_left,
-        max_ee=max_ee,
-        trunc_q=trunc_q,
-        pooling_method=pooling_method,
-        chimera_method=chimera_method,
-        min_fold_parent_over_abundance=min_fold_parent_over_abundance,
-        allow_one_off=allow_one_off,
-        n_threads=n_threads,
-        n_reads_learn=n_reads_learn,
-        hashed_feature_ids=hashed_feature_ids,
-        homopolymer_gap_penalty='NULL',
-        band_size='16')
+    #_check_inputs(**locals())
+    with tempfile.TemporaryDirectory() as temp_dir_name:
+        biom_fp = os.path.join('output.tsv.biom')
+        track_fp = os.path.join('track.tsv')
+        ASV_dest = os.path.join('temp_ASV_table.csv')
+        transposed_table =  asv_or_otu_table.transpose()
+        transposed_table.to_csv(os.path.join(ASV_dest))
+
+        metadata = meta_data.to_dataframe()
+        meta_dest = os.path.join('temp_metadata.csv')
+        metadata.to_csv(os.path.join(meta_dest))
+
+
+
+        cmd = ['run_decontam.R',
+                   '--asv_table_path', str(ASV_dest),
+                   '--output_path', biom_fp,
+                   '--output_track', track_fp,
+                   '--temp_dir_name', temp_dir_name,
+                   '--meta_table_path', meta_data,
+                   '--control_sample_id_method', str(control_sample_id_method),
+                   '--control_column_id', str(control_column_id),
+                   '--control_sample_indicator', str(control_sample_indicator)]
+        try:
+            run_commands([cmd])
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 2:
+                raise ValueError(
+                        "There was an issue running run_decontam.R please check your inputs")
+            else:
+                raise Exception("An error was encountered while running Decontam"
+                                    " in R (return code %d), please inspect stdout"
+                                    " and stderr to learn more." % e.returncode)
+        return biom_fp
