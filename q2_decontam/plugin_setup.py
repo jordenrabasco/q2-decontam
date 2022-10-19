@@ -39,7 +39,8 @@ plugin.methods.register_function(
                 qiime2.plugin.Choices(_CONTROL_OPT),
                 'control_column_id': qiime2.plugin.Str,
                 'control_sample_indicator': qiime2.plugin.Str,},
-    outputs=[('table', Metadata)],
+    outputs=[('table', FeatureTable[Frequency]),
+             ('decontam_stats', SampleData[DecontamStats])],
     input_descriptions={
         'asv_or_otu_table': ('Table with presence counts in the matrix '
                              'rownames are sample id and column names are'
@@ -56,7 +57,7 @@ plugin.methods.register_function(
         'control_sample_indicator': ('indicate the control sample identifier')
     },
     output_descriptions={
-        'table': ('The resulting metadata file indicating contaminant seqs')
+        'table': ('The resulting ASV or OTU file')
     },
     name='Identify contaminants via the prevelance method',
     description=('This method identifies contaminant sequences from an '

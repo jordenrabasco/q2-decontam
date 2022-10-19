@@ -36,7 +36,9 @@ opt = parse_args(OptionParser(option_list=option_list))
 inp.loc <- opt$asv_table_path
 #inp.loc <- '/Users/jrabasc/Desktop/temp_ASV_table.csv' 
 out.path <- opt$output_path
+
 out.track <- opt$output_track
+#out.track <- '/Users/jrabasc/Desktop/temp_decontam.tsv' 
 temp.dir.name<-opt$temp_dir_name
 metadata.loc<-opt$meta_table_path
 #metadata.loc<-'/Users/jrabasc/Desktop/temp_metadata.csv'
@@ -58,6 +60,8 @@ if(!file.exists(inp.loc)) {
   print("Congrats your files exist")
 }
 
+
+
 prevelance <- function(asv_df, control_vec, id.controls) {
   #genretates true/false vec for is contamination
   true_false_control_vec<-grepl(id.controls,control_vec)
@@ -67,6 +71,7 @@ prevelance <- function(asv_df, control_vec, id.controls) {
   return(prev_contam)
 }
 
+control_vec<-c()
 asv_df <- read.csv(file = inp.loc)
 rownames(asv_df) <- asv_df[, 1]  ## set rownames
 asv_df <- asv_df[, -1]  
@@ -78,26 +83,27 @@ if(how.id.controls == 'column_name'){
     index=index+1
     if(tolower(id) == tolower(control.col)){
       control_vec<-metadata_df[,c(index)]
-      prev_contam <<-prevelance(asv_df,control_vec,id.controls)
     }
   }
 }else if(how.id.controls == 'column_number'){
   control.col <- if(opt$control_column_id=='NULL') NULL else as.numeric(opt$control_column_id)
   if(ncol(metadata_df) >= int(control.col)){
     control_vec<-metadata_df[,c(int(control.col))]
-    prev_contam <<-prevelance(asv_df,control_vec,id.controls)
   }else{
     print("Not a valid column number")
   }
 }else{
   print("Something has gone horribly wrong")
-}
+}    
+
+prev_contam <-prevelance(asv_df,control_vec,id.controls)
 
 ### WRITE OUTPUT AND QUIT ###
 cat("7) Write output\n")
-write.table(seqtab.nochim, out.path, sep="\t",
-            row.names=TRUE, col.names=col.names, quote=FALSE)
-write.table(df,file='/Users/admin/new_file.csv',col.names=FALSE)
+write.table(prev_contam, out.track, sep="\t",
+            row.names=TRUE, col.names=NA, quote=FALSE)
+write.table(asv_df, out.path, sep="\t",
+            row.names=TRUE, col.names=NA, quote=FALSE)
 
 q(status=0)
 
