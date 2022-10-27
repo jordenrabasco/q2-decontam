@@ -13,6 +13,8 @@ import os
 import tempfile
 import hashlib
 import subprocess
+from qiime2.plugin.util import transform
+from ._stats import DecontamStats, DecontamStatsDirFmt, DecontamStatsFormat
 
 import biom
 import skbio
@@ -90,16 +92,18 @@ def _decontam_helper(biom_fp, track_fp):
         table = biom.Table.from_tsv(fh, None, None, None)
 
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
-    df.index.name = 'sample-id'
-    df = df.astype(str)
-    metadata = qiime2.Metadata(df)
+
+    metadata = transform(df, from_type=pd.DataFrame, to_type=DecontamStatsFormat)
+    #df = df.astype(str)
+    #metadata_temp = qiime2.Metadata(df)
+    #metadata = DecontamStatsFormat(metadata_temp)
 
     return table, metadata
 
 
 def contaminant_prevelance(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata,
                    control_sample_id_method: str='column_name', control_column_id: str = 'NULL',control_sample_indicator: str='NULL'
-                   ) -> (biom.Table, qiime2.Metadata):
+                   ) -> (biom.Table, DecontamStatsFormat):
     #_check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
         biom_fp = os.path.join(temp_dir_name, 'output.tsv.biom')

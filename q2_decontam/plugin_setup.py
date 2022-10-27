@@ -64,13 +64,34 @@ plugin.methods.register_function(
                  'OTU or ASV table and reports them to the user')
 )
 
+plugin.visualizers.register_function(
+    function=q2_decontam.graph,
+    inputs={
+        'table': FeatureTable[Frequency]
+    },
+    parameters={
+        'metadata': Metadata,
+    },
+    name='Generate a heatmap representation of a feature table',
+    description='Generate a heatmap representation of a feature table with '
+                'optional clustering on both the sample and feature axes.\n\n'
+                'Tip: To generate a heatmap containing taxonomic annotations, '
+                'use `qiime taxa collapse` to collapse the feature table at '
+                'the desired taxonomic level.',
+    input_descriptions={
+        'table': 'The feature table to visualize.'
+    },
+    parameter_descriptions={
+        'metadata': 'Annotate the sample IDs with these metadata values. '
+                    'When metadata is present and `cluster`=\'feature\', '
+                    'samples will be sorted by the metadata values.',
+    }
+)
+
+
+
 plugin.register_formats(DecontamStatsFormat, DecontamStatsDirFmt)
 plugin.register_semantic_types(DecontamStats)
 plugin.register_semantic_type_to_format(
     SampleData[DecontamStats], DecontamStatsDirFmt)
-
-#plugin.register_formats(DecontamStatsFormat, DecontamStatsDirFmt)
-#plugin.register_semantic_types(DecontamStats)
-#plugin.register_semantic_type_to_format(
-#    SampleData[DecontamStats], DecontamStatsDirFmt)
 importlib.import_module('q2_decontam._transformer')

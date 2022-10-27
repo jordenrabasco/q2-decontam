@@ -23,7 +23,8 @@ setup(
     description="Apply decontam to present or remove potential contmaination ASVs. ",
     scripts=['q2_decontam/assets/run_decontam.R'],
     package_data={
-        'q2_decontam': ['citations.bib']
+        'q2_decontam': ['citations.bib'],
+        'q2_decontam._threshold_graph': ['assets/index.html'],
     },
     entry_points={
         "qiime2.plugins":

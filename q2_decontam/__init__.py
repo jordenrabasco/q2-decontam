@@ -9,10 +9,12 @@
 from ._decontamination import contaminant_prevelance
 from ._version import get_versions
 from ._stats import DecontamStats, DecontamStatsDirFmt, DecontamStatsFormat
+from ._threshold_graph import (graph, graph_choices)
 
 
 __version__ = get_versions()['version']
 del get_versions
 
 __all__ = ['contaminant_prevelance',
-           'DecontamStats', 'DecontamStatsFormat', 'DecontamStatsDirFmt']
+           'DecontamStats', 'DecontamStatsFormat', 'DecontamStatsDirFmt',
+           'graph','graph_choices']
