@@ -40,7 +40,7 @@ plugin.methods.register_function(
                 'control_column_id': qiime2.plugin.Str,
                 'control_sample_indicator': qiime2.plugin.Str,},
     outputs=[('table', FeatureTable[Frequency]),
-             ('decontam_stats', SampleData[DecontamStats])],
+             ('decontam_stats', FeatureData[DecontamStats])],
     input_descriptions={
         'asv_or_otu_table': ('Table with presence counts in the matrix '
                              'rownames are sample id and column names are'
@@ -93,5 +93,5 @@ plugin.visualizers.register_function(
 plugin.register_formats(DecontamStatsFormat, DecontamStatsDirFmt)
 plugin.register_semantic_types(DecontamStats)
 plugin.register_semantic_type_to_format(
-    SampleData[DecontamStats], DecontamStatsDirFmt)
+    FeatureData[DecontamStats], DecontamStatsDirFmt)
 importlib.import_module('q2_decontam._transformer')

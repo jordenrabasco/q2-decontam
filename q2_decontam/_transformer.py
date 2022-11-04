@@ -7,8 +7,6 @@ from q2_decontam.plugin_setup import plugin
 
 def _dataframe_to_tsv_taxonomy_format(df):
     ff = DecontamStatsFormat()
-    df.index.name = '#OTU ID'
-    df['contaminant'] = df['contaminant'].astype('bool')
     df.to_csv(str(ff), sep='\t', header=True, index=True)
     return ff
 

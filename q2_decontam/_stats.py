@@ -7,10 +7,10 @@
 # ----------------------------------------------------------------------------
 
 from qiime2.plugin import SemanticType, model
-from q2_types.sample_data import SampleData
+from q2_types.feature_data import FeatureData
 
 
-DecontamStats = SemanticType('DecontamStats', variant_of=SampleData.field['type'])
+DecontamStats = SemanticType('DecontamStats', variant_of=FeatureData.field['type'])
 
 
 class DecontamStatsFormat(model.TextFileFormat):

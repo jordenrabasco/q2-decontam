@@ -92,7 +92,7 @@ def _decontam_helper(biom_fp, track_fp):
         table = biom.Table.from_tsv(fh, None, None, None)
 
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
-
+    df.index.name = '#OTU ID'
     metadata = transform(df, from_type=pd.DataFrame, to_type=DecontamStatsFormat)
     #df = df.astype(str)
     #metadata_temp = qiime2.Metadata(df)
