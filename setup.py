@@ -19,12 +19,19 @@ setup(
     license="BSD-3-Clause",
     packages=find_packages(),
     author="Jorden Rabasco and Benjamin Callahan",
-    author_email="jrabasc@ncsu.com",
+    author_email="jrabasc@ncsu.edu",
     description="Apply decontam to present or remove potential contmaination ASVs. ",
     scripts=['q2_decontam/assets/run_decontam.R'],
     package_data={
         'q2_decontam': ['citations.bib'],
         'q2_decontam._threshold_graph': ['assets/index.html'],
+        'q2_decontam.tests': ['data/*',
+                           'data/expected/*',
+                           'data/mixed_barcodes_and_ids/*',
+                           'data/underscore_samples/*',
+                           'data/sample_seqs_single/*',
+                           'data/sample_seqs_ccs/*',
+                           'data/sample_seqs_paired/*']
     },
     entry_points={
         "qiime2.plugins":

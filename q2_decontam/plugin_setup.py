@@ -16,9 +16,10 @@ from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, Frequency
 
 import q2_decontam
-from q2_decontam import DecontamStats, DecontamStatsFormat, DecontamStatsDirFmt
+from q2_decontam import ScoreTable, ScoreTableFormat, ScoreTableDirFmt
 
-_CONTROL_OPT = {'column_name', 'column_number'}
+_COL_OPT = {'column_name', 'column_number'}
+_DECON_METHOD_OPT = {'frequency', 'prevalence', 'combined'}
 
 plugin = qiime2.plugin.Plugin(
     name='decontam',
@@ -32,15 +33,15 @@ plugin = qiime2.plugin.Plugin(
 
 
 plugin.methods.register_function(
-    function=q2_decontam.contaminant_prevelance,
+    function=q2_decontam.prevalence_identify,
     inputs={'asv_or_otu_table': FeatureTable[Frequency]},
     parameters={ 'meta_data': Metadata,
-                 'control_sample_id_method': qiime2.plugin.Str %
-                qiime2.plugin.Choices(_CONTROL_OPT),
+                 'threshold': qiime2.plugin.Float,
+                'control_sample_id_method': qiime2.plugin.Str %
+                qiime2.plugin.Choices(_COL_OPT),
                 'control_column_id': qiime2.plugin.Str,
                 'control_sample_indicator': qiime2.plugin.Str,},
-    outputs=[('table', FeatureTable[Frequency]),
-             ('decontam_stats', FeatureData[DecontamStats])],
+    outputs=[('score_table', FeatureData[ScoreTable])],
     input_descriptions={
         'asv_or_otu_table': ('Table with presence counts in the matrix '
                              'rownames are sample id and column names are'
@@ -53,16 +54,27 @@ plugin.methods.register_function(
                            'to ASV_or_OTU_table'),
         'control_sample_id_method': ('Select how to id experiment control'
                                      'sequences'),
+        'threshold': ('Select threshold cutoff for decontam algorithm scores'),
         'control_column_id': ('Input control column identification'),
         'control_sample_indicator': ('indicate the control sample identifier')
     },
     output_descriptions={
-        'table': ('The resulting ASV or OTU file')
+        'score_table': ('The resulting table of scores from the input ASV table')
     },
     name='Identify contaminants via the prevelance method',
     description=('This method identifies contaminant sequences from an '
                  'OTU or ASV table and reports them to the user')
 )
+
+
+
+
+
+
+
+
+
+
 
 plugin.visualizers.register_function(
     function=q2_decontam.graph,
@@ -90,8 +102,8 @@ plugin.visualizers.register_function(
 
 
 
-plugin.register_formats(DecontamStatsFormat, DecontamStatsDirFmt)
-plugin.register_semantic_types(DecontamStats)
+plugin.register_formats(ScoreTableFormat, ScoreTableDirFmt)
+plugin.register_semantic_types(ScoreTable)
 plugin.register_semantic_type_to_format(
-    FeatureData[DecontamStats], DecontamStatsDirFmt)
+    FeatureData[ScoreTable], ScoreTableDirFmt)
 importlib.import_module('q2_decontam._transformer')

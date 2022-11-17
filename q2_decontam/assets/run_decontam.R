@@ -11,6 +11,10 @@ errQuit <- function(mesg, status=1) { message("Error: ", mesg); q(status=status)
 option_list = list(
   make_option(c("--asv_table_path"), action="store", default='NULL', type='character',
               help="File path to table in .csv format "),
+  make_option(c("--threshold"), action="store", default='NULL', type='character',
+              help="threshold value for decontam algorithm"),
+  make_option(c("--decon_method"), action="store", default='NULL', type='character',
+              help="algoithm mode"),
   make_option(c("--output_path"), action="store", default='NULL', type='character',
               help="File path to output tsv file. If already exists, will be overwritten"),
   make_option(c("--output_track"), action="store", default='NULL', type='character',
@@ -36,13 +40,13 @@ opt = parse_args(OptionParser(option_list=option_list))
 inp.loc <- opt$asv_table_path
 #inp.loc <- '/Users/jrabasc/Desktop/temp_ASV_table.csv' 
 out.path <- opt$output_path
-
+threshold <- if(opt$threshold=='NULL') NULL else as.numeric(opt$threshold)
 out.track <- opt$output_track
 #out.track <- '/Users/jrabasc/Desktop/temp_decontam.tsv' 
 temp.dir.name<-opt$temp_dir_name
 metadata.loc<-opt$meta_table_path
 #metadata.loc<-'/Users/jrabasc/Desktop/temp_metadata.csv'
-
+decon.mode<-opt$decon_method
 how.id.controls<-opt$control_sample_id_method
 #how.id.controls<-'column_name'
 
@@ -67,7 +71,7 @@ prevelance <- function(asv_df, control_vec, id.controls) {
   true_false_control_vec<-grepl(id.controls,control_vec)
   # Prevalence-based contaminant classification
   numero_df <- as.matrix(sapply(asv_df, as.numeric)) 
-  prev_contam <- isContaminant(numero_df, neg=true_false_control_vec, threshold=0.1, detailed=TRUE, normalize=TRUE, method='prevalence')
+  prev_contam <- isContaminant(numero_df, neg=true_false_control_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method=decon.mode)
   return(prev_contam)
 }
 

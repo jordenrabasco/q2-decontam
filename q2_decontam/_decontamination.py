@@ -14,12 +14,13 @@ import tempfile
 import hashlib
 import subprocess
 from qiime2.plugin.util import transform
-from ._stats import DecontamStats, DecontamStatsDirFmt, DecontamStatsFormat
+from ._stats import ScoreTable, ScoreTableDirFmt, ScoreTableFormat
 
 import biom
 import skbio
 import qiime2.util
 import pandas as pd
+import numpy as np
 from qiime2.plugin import (Plugin, Int, Float, Range, Metadata, Str, Bool,
                            Choices, MetadataColumn, Categorical, List,
                            Citations, TypeMatch)
@@ -57,14 +58,18 @@ def _check_featureless_table(fp):
 
 _WHOLE_NUM = (lambda x: x >= 0, 'non-negative')
 _NAT_NUM = (lambda x: x > 0, 'greater than zero')
-_CONTROL_STR = (lambda x: x in { 'column_name', 'column_number'},
+_COL_STR = (lambda x: x in { 'column_name', 'column_number'},
              'sample_name or column_name or column_number')
+_DECON_METHOD_STR = (lambda x: x in {'frequency', 'prevalence', 'combined'},
+             'freqeuncy, prevalence, combined')
 _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
 # Better to choose to skip, than to implicitly ignore things that KeyError
 _SKIP = (lambda x: True, '')
 _valid_inputs = {
     'm_control_file': _SKIP,
-    'control_sample_id_method': _CONTROL_STR,
+    'threshold': _NAT_NUM,
+    'control_sample_id_method': _COL_STR,
+    'decon_method': _DECON_METHOD_STR,
     'control_column_id': _SKIP,
     'control_sample_indicator': _SKIP,
 }
@@ -87,23 +92,23 @@ def _filepath_to_sample(fp):
 # the bulk of the functionality to this helper util. Typechecking is assumed
 # to have occurred in the calling functions, this is primarily for making
 # sure that DADA2 is able to do what it needs to do.
-def _decontam_helper(biom_fp, track_fp):
-    with open(biom_fp) as fh:
-        table = biom.Table.from_tsv(fh, None, None, None)
+def _identify_helper(track_fp):
 
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
     df.index.name = '#OTU ID'
-    metadata = transform(df, from_type=pd.DataFrame, to_type=DecontamStatsFormat)
-    #df = df.astype(str)
-    #metadata_temp = qiime2.Metadata(df)
-    #metadata = DecontamStatsFormat(metadata_temp)
+    df=df.drop(df.columns[[(len(df.columns)-1)]], axis=1)
+    temp_transposed_table = df.transpose()
+    temp_transposed_table = temp_transposed_table.dropna()
+    df = temp_transposed_table.transpose()
 
-    return table, metadata
+    metadata = transform(df, from_type=pd.DataFrame, to_type=ScoreTableFormat)
+
+    return metadata
 
 
-def contaminant_prevelance(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata,
+def prevalence_identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, threshold: float=0.1,
                    control_sample_id_method: str='column_name', control_column_id: str = 'NULL',control_sample_indicator: str='NULL'
-                   ) -> (biom.Table, DecontamStatsFormat):
+                   ) -> (ScoreTableFormat):
     #_check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
         biom_fp = os.path.join(temp_dir_name, 'output.tsv.biom')
@@ -116,10 +121,10 @@ def contaminant_prevelance(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Met
         meta_dest = os.path.join(temp_dir_name,'temp_metadata.csv')
         metadata.to_csv(os.path.join(meta_dest))
 
-
-
         cmd = ['run_decontam.R',
                    '--asv_table_path', str(ASV_dest),
+                   '--threshold', str(threshold),
+                   '--decon_method', str('prevalence'),
                    '--output_path', biom_fp,
                    '--output_track', track_fp,
                    '--temp_dir_name', temp_dir_name,
@@ -137,4 +142,5 @@ def contaminant_prevelance(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Met
                 raise Exception("An error was encountered while running Decontam"
                                     " in R (return code %d), please inspect stdout"
                                     " and stderr to learn more." % e.returncode)
-        return _decontam_helper(biom_fp,track_fp)
+        return _identify_helper(track_fp)
+

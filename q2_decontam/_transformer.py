@@ -1,28 +1,49 @@
 import qiime2
 import pandas as pd
-#from q2_types.feature_data import (TaxonomyFormat, HeaderlessTSVTaxonomyFormat, TSVTaxonomyFormat)
-from q2_decontam import DecontamStatsFormat
+from q2_decontam import ScoreTableFormat
 from q2_decontam.plugin_setup import plugin
+import collections
+import numpy as np
 
 
-def _dataframe_to_tsv_taxonomy_format(df):
-    ff = DecontamStatsFormat()
+_score_table_header = collections.OrderedDict([
+     ('#OTU ID', str),
+     ('freq', float),
+     ('prev', float),
+     ('p.freq', float),
+     ('p.prev', float),
+     ('p', float)])
+
+
+def _dataframe_to_tsv_ScoreTable_format(df):
+    ff = ScoreTableFormat()
     df.to_csv(str(ff), sep='\t', header=True, index=True)
     return ff
+def _ScoreTable_to_df(ff):
+    #df = pd.read_csv(str(ff), sep='\t', index_col=0,
+    #                 names=_score_table_header.keys(),
+    #                dtype=_score_table_header)
+    temp_meta = qiime2.Metadata.load(str(ff))
+    df = temp_meta.to_dataframe()
+    return df
 
 
 @plugin.register_transformer
-def _1(ff: DecontamStatsFormat) -> qiime2.Metadata:
+def _1(ff: ScoreTableFormat) -> qiime2.Metadata:
     return qiime2.Metadata.load(str(ff))
 
 
 @plugin.register_transformer
-def _2(obj: qiime2.Metadata) -> DecontamStatsFormat:
-    ff = DecontamStatsFormat()
+def _2(obj: qiime2.Metadata) -> ScoreTableFormat:
+    ff = ScoreTableFormat()
     obj.save(str(ff))
     return ff
 
 @plugin.register_transformer
-def _3(df: pd.DataFrame) -> DecontamStatsFormat:
+def _3(df: pd.DataFrame) -> ScoreTableFormat:
 
-    return _dataframe_to_tsv_taxonomy_format(df)
+    return _dataframe_to_tsv_ScoreTable_format(df)
+
+@plugin.register_transformer
+def _4(ff: ScoreTableFormat) -> pd.DataFrame:
+    return _ScoreTable_to_df(ff)

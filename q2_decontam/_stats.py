@@ -10,13 +10,13 @@ from qiime2.plugin import SemanticType, model
 from q2_types.feature_data import FeatureData
 
 
-DecontamStats = SemanticType('DecontamStats', variant_of=FeatureData.field['type'])
+ScoreTable = SemanticType('ScoreTable', variant_of=FeatureData.field['type'])
 
 
-class DecontamStatsFormat(model.TextFileFormat):
+class ScoreTableFormat(model.TextFileFormat):
     def validate(*args):
         pass
 
 
-DecontamStatsDirFmt = model.SingleFileDirectoryFormat(
-    'DecontamStatsDirFmt', 'stats.tsv', DecontamStatsFormat)
+ScoreTableDirFmt = model.SingleFileDirectoryFormat(
+    'ScoreTableDirFmt', 'stats.tsv', ScoreTableFormat)
