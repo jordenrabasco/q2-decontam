@@ -22,7 +22,7 @@ from q2_types.per_sample_sequences import (
 from q2_decontam._stats import ScoreTable, ScoreTableDirFmt, ScoreTableFormat
 from qiime2.plugin.util import transform
 
-from q2_decontam import prevalence_identify
+from q2_decontam import identify
 from q2_decontam._decontamination import _check_featureless_table
 
 
@@ -46,9 +46,9 @@ class TestPrevalenceIdentify(TestPluginBase):
         temp_transposed_table=temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
 
-        output_feature_table = prevalence_identify(asv_or_otu_table=self.asv_table, meta_data=self.metadata_input,
-                                        threshold=0.1, control_sample_id_method='column_name',
-                                        control_column_id='Sample_or_ConTrol', control_sample_indicator='Control')
+        output_feature_table = identify(asv_or_otu_table=self.asv_table, meta_data=self.metadata_input,
+                                        decon_method='prevalence', threshold=0.1,
+                                        prev_control_or_exp_sample_column='Sample_or_ConTrol', prev_control_sample_indicator='Control')
         df_output_feature_table = transform(output_feature_table, from_type=ScoreTableFormat, to_type=pd.DataFrame)
         df_output_feature_table=df_output_feature_table.round(decimals=6)
         exp_table=exp_table.round(decimals=6)

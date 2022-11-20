@@ -33,14 +33,15 @@ plugin = qiime2.plugin.Plugin(
 
 
 plugin.methods.register_function(
-    function=q2_decontam.prevalence_identify,
+    function=q2_decontam.identify,
     inputs={'asv_or_otu_table': FeatureTable[Frequency]},
     parameters={ 'meta_data': Metadata,
                  'threshold': qiime2.plugin.Float,
-                'control_sample_id_method': qiime2.plugin.Str %
-                qiime2.plugin.Choices(_COL_OPT),
-                'control_column_id': qiime2.plugin.Str,
-                'control_sample_indicator': qiime2.plugin.Str,},
+                'decon_method': qiime2.plugin.Str %
+                qiime2.plugin.Choices(_DECON_METHOD_OPT),
+                'freq_concentration_column': qiime2.plugin.Str,
+                'prev_control_or_exp_sample_column': qiime2.plugin.Str,
+                'prev_control_sample_indicator': qiime2.plugin.Str,},
     outputs=[('score_table', FeatureData[ScoreTable])],
     input_descriptions={
         'asv_or_otu_table': ('Table with presence counts in the matrix '
@@ -52,11 +53,11 @@ plugin.methods.register_function(
                            'experiment are control samples, '
                            'assumes sample names in file correspond '
                            'to ASV_or_OTU_table'),
-        'control_sample_id_method': ('Select how to id experiment control'
-                                     'sequences'),
+        'decon_method': ('Select how to which method to id contaminants with'),
         'threshold': ('Select threshold cutoff for decontam algorithm scores'),
-        'control_column_id': ('Input control column identification'),
-        'control_sample_indicator': ('indicate the control sample identifier')
+        'freq_concentration_column': ('Input column name that has concentration information for the samples'),
+        'prev_control_or_exp_sample_column': ('Input column name containing experimental or control sample metadata'),
+        'prev_control_sample_indicator': ('indicate the control sample identifier')
     },
     output_descriptions={
         'score_table': ('The resulting table of scores from the input ASV table')

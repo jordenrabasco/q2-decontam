@@ -68,7 +68,6 @@ _SKIP = (lambda x: True, '')
 _valid_inputs = {
     'm_control_file': _SKIP,
     'threshold': _NAT_NUM,
-    'control_sample_id_method': _COL_STR,
     'decon_method': _DECON_METHOD_STR,
     'control_column_id': _SKIP,
     'control_sample_indicator': _SKIP,
@@ -96,7 +95,9 @@ def _identify_helper(track_fp):
 
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
     df.index.name = '#OTU ID'
+    #removes last column containing true/false information from the dataframe
     df=df.drop(df.columns[[(len(df.columns)-1)]], axis=1)
+    #removes all columns that are completely empty
     temp_transposed_table = df.transpose()
     temp_transposed_table = temp_transposed_table.dropna()
     df = temp_transposed_table.transpose()
@@ -106,12 +107,12 @@ def _identify_helper(track_fp):
     return metadata
 
 
-def prevalence_identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, threshold: float=0.1,
-                   control_sample_id_method: str='column_name', control_column_id: str = 'NULL',control_sample_indicator: str='NULL'
+def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_method: str='prevalence', threshold: float=0.1,
+             freq_concentration_column: str = 'NULL',prev_control_or_exp_sample_column: str = 'NULL', prev_control_sample_indicator: str='NULL'
                    ) -> (ScoreTableFormat):
     #_check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
-        biom_fp = os.path.join(temp_dir_name, 'output.tsv.biom')
+        summary_fp = os.path.join(temp_dir_name, 'output.tsv.biom')
         track_fp = os.path.join(temp_dir_name,'track.tsv')
         ASV_dest = os.path.join(temp_dir_name,'temp_ASV_table.csv')
         transposed_table =  asv_or_otu_table.transpose()
@@ -124,14 +125,13 @@ def prevalence_identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metada
         cmd = ['run_decontam.R',
                    '--asv_table_path', str(ASV_dest),
                    '--threshold', str(threshold),
-                   '--decon_method', str('prevalence'),
-                   '--output_path', biom_fp,
+                   '--decon_method', decon_method,
+                   '--output_summary_path', summary_fp,
                    '--output_track', track_fp,
-                   '--temp_dir_name', temp_dir_name,
                    '--meta_table_path', str(meta_dest),
-                   '--control_sample_id_method', str(control_sample_id_method),
-                   '--control_column_id', str(control_column_id),
-                   '--control_sample_indicator', str(control_sample_indicator)]
+                   '--freq_con_column', str(freq_concentration_column),
+                   '--prev_control_or_exp_sample_column', str(prev_control_or_exp_sample_column),
+                   '--prev_control_sample_indicator', str(prev_control_sample_indicator)]
         try:
             run_commands([cmd])
         except subprocess.CalledProcessError as e:

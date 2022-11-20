@@ -15,19 +15,17 @@ option_list = list(
               help="threshold value for decontam algorithm"),
   make_option(c("--decon_method"), action="store", default='NULL', type='character',
               help="algoithm mode"),
-  make_option(c("--output_path"), action="store", default='NULL', type='character',
+  make_option(c("--output_summary_path"), action="store", default='NULL', type='character',
               help="File path to output tsv file. If already exists, will be overwritten"),
   make_option(c("--output_track"), action="store", default='NULL', type='character',
               help="File path to tracking tsv file. If already exists, will be overwritten"),
-  make_option(c("--temp_dir_name"), action="store", default='NULL', type='character',
-              help="temporary directory location address"),
   make_option(c("--meta_table_path"), action="store", default='NULL', type='character',
               help="File path to metadata in .tsv format"),
-  make_option(c("--control_sample_id_method"), action="store", default='NULL', type='character',
-              help="Method to identify control samples"),
-  make_option(c("--control_column_id"), action="store", default='NULL', type='character',
-              help="Method to identify control samples"),
-  make_option(c("--control_sample_indicator"), action="store", default='NULL', type='character',
+  make_option(c("--freq_con_column"), action="store", default='NULL', type='character',
+              help="Name of column for frequency method"),
+  make_option(c("--prev_control_or_exp_sample_column"), action="store", default='NULL', type='character',
+              help="Name of column for prevelance method"),
+  make_option(c("--prev_control_sample_indicator"), action="store", default='NULL', type='character',
               help="Indicator to identify control samples")
 )
 opt = parse_args(OptionParser(option_list=option_list))
@@ -38,23 +36,26 @@ opt = parse_args(OptionParser(option_list=option_list))
 # Assign each of the arguments, in positional order, to an appropriately named R variable
 
 inp.loc <- opt$asv_table_path
-#inp.loc <- '/Users/jrabasc/Desktop/temp_ASV_table.csv' 
-out.path <- opt$output_path
+out.path <- opt$output_summary_path
 threshold <- if(opt$threshold=='NULL') NULL else as.numeric(opt$threshold)
 out.track <- opt$output_track
-#out.track <- '/Users/jrabasc/Desktop/temp_decontam.tsv' 
-temp.dir.name<-opt$temp_dir_name
 metadata.loc<-opt$meta_table_path
-#metadata.loc<-'/Users/jrabasc/Desktop/temp_metadata.csv'
 decon.mode<-opt$decon_method
-how.id.controls<-opt$control_sample_id_method
-#how.id.controls<-'column_name'
+prev.control.col <- opt$prev_control_or_exp_sample_column
+perv.id.controls<-opt$prev_control_sample_indicator
+freq.control.col<-opt$freq_con_column
 
-control.col <- opt$control_column_id
-#control.col <- 'Sample_or_ConTrol'
+#testing variables
 
-id.controls<-opt$control_sample_indicator
-#id.controls<-'Control'
+inp.loc <- '/Users/jrabasc/Desktop/temp_ASV_table.csv' 
+out.path <- '/Users/jrabasc/Desktop/temp_summary_decontam.tsv'
+threshold<-0.1
+out.track <- '/Users/jrabasc/Desktop/temp_decontam.tsv'
+metadata.loc<-'/Users/jrabasc/Desktop/temp_metadata.csv'
+decon.mode<-'combined'
+prev.control.col <- 'Sample_or_ConTrol'
+prev.id.controls<-'Control'
+freq.control.col<-'quant_reading'
 
 if(!file.exists(inp.loc)) {
   errQuit("Input ASV table does not exist.")
@@ -64,24 +65,8 @@ if(!file.exists(inp.loc)) {
   print("Congrats your files exist")
 }
 
-
-
-prevelance <- function(asv_df, control_vec, id.controls) {
-  #genretates true/false vec for is contamination
-  true_false_control_vec<-grepl(id.controls,control_vec)
-  # Prevalence-based contaminant classification
-  numero_df <- as.matrix(sapply(asv_df, as.numeric)) 
-  prev_contam <- isContaminant(numero_df, neg=true_false_control_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method=decon.mode)
-  return(prev_contam)
-}
-
-control_vec<-c()
-asv_df <- read.csv(file = inp.loc)
-rownames(asv_df) <- asv_df[, 1]  ## set rownames
-asv_df <- asv_df[, -1]  
-metadata_df<-read.csv(file = metadata.loc)
-
-if(how.id.controls == 'column_name'){
+meta_data_cols <-function(metadata_df, control.col){
+  control_vec<-c()
   index<-0
   for (id in colnames(metadata_df)) {
     index=index+1
@@ -89,27 +74,55 @@ if(how.id.controls == 'column_name'){
       control_vec<-metadata_df[,c(index)]
     }
   }
-}else if(how.id.controls == 'column_number'){
-  control.col <- if(opt$control_column_id=='NULL') NULL else as.numeric(opt$control_column_id)
-  if(ncol(metadata_df) >= int(control.col)){
-    control_vec<-metadata_df[,c(int(control.col))]
-  }else{
-    print("Not a valid column number")
-  }
+  return(control_vec)
+}
+
+outputer<-function(decon_output, out.track,asv_df, out.path){
+  ### WRITE OUTPUT AND QUIT ###
+  cat("7) Write output\n")
+  write.table(decon_output, out.track, sep="\t",
+              row.names=TRUE, col.names=NA, quote=FALSE)
+  
+  summary_df <- as.data.frame.matrix(summary(decon_output)) 
+  write.table(summary_df, out.path, sep="\t",
+              row.names=TRUE, col.names=NA, quote=FALSE)
+  
+  #q(status=0)
+}
+
+asv_df <- read.csv(file = inp.loc)
+rownames(asv_df) <- asv_df[, 1]  ## set rownames
+asv_df <- asv_df[, -1]
+numero_df <- as.matrix(sapply(asv_df, as.numeric)) 
+metadata_df<-read.csv(file = metadata.loc)
+
+if(decon.mode == 'prevalence'){
+  control_vec <- meta_data_cols(metadata_df, prev.control.col)
+  #genretates true/false vec for is contamination
+  true_false_control_vec<-grepl(prev.id.controls,control_vec)
+  # Prevalence-based contaminant classification
+  prev_contam <- isContaminant(numero_df, neg=true_false_control_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='prevalence')
+  outputer(prev_contam, out.track,asv_df, out.path)
+}else if(decon.mode == 'frequency'){
+  control_vec <- meta_data_cols(metadata_df, freq.control.col)
+  #genretates numeric vector for contamination analysis
+  quant_vec<-as.numeric(control_vec)
+  # Prevalence-based contaminant classification
+  freq_contam <- isContaminant(numero_df, conc=quant_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='frequency')
+  outputer(freq_contam, out.track,asv_df, out.path)
 }else{
-  print("Something has gone horribly wrong")
-}    
+  prev_control_vec <- meta_data_cols(metadata_df, prev.control.col)
+  quant_control_vec <- meta_data_cols(metadata_df, freq.control.col)
 
-prev_contam <-prevelance(asv_df,control_vec,id.controls)
+  quant_vec<-as.numeric(quant_control_vec)
+  true_false_control_vec<-grepl(prev.id.controls, prev_control_vec)
+  
+  comb_contam <- isContaminant(numero_df, neg=true_false_control_vec, conc=quant_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='combined')
+  outputer(comb_contam, out.track,asv_df, out.path)
+}
 
-### WRITE OUTPUT AND QUIT ###
-cat("7) Write output\n")
-write.table(prev_contam, out.track, sep="\t",
-            row.names=TRUE, col.names=NA, quote=FALSE)
-write.table(asv_df, out.path, sep="\t",
-            row.names=TRUE, col.names=NA, quote=FALSE)
 
-q(status=0)
+
 
 
 
