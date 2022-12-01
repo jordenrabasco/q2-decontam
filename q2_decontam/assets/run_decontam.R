@@ -42,20 +42,20 @@ out.track <- opt$output_track
 metadata.loc<-opt$meta_table_path
 decon.mode<-opt$decon_method
 prev.control.col <- opt$prev_control_or_exp_sample_column
-perv.id.controls<-opt$prev_control_sample_indicator
+prev.id.controls<-opt$prev_control_sample_indicator
 freq.control.col<-opt$freq_con_column
 
 #testing variables
 
-inp.loc <- '/Users/jrabasc/Desktop/temp_ASV_table.csv' 
-out.path <- '/Users/jrabasc/Desktop/temp_summary_decontam.tsv'
-threshold<-0.1
-out.track <- '/Users/jrabasc/Desktop/temp_decontam.tsv'
-metadata.loc<-'/Users/jrabasc/Desktop/temp_metadata.csv'
-decon.mode<-'combined'
-prev.control.col <- 'Sample_or_ConTrol'
-prev.id.controls<-'Control'
-freq.control.col<-'quant_reading'
+#inp.loc <- '/Users/jrabasc/Desktop/temp_ASV_table.csv' 
+#out.path <- '/Users/jrabasc/Desktop/temp_summary_decontam.tsv'
+#threshold<-0.1
+#out.track <- '/Users/jrabasc/Desktop/temp_decontam.tsv'
+#metadata.loc<-'/Users/jrabasc/Desktop/temp_metadata.csv'
+#decon.mode<-'combined'
+#prev.control.col <- 'Sample_or_ConTrol'
+#prev.id.controls<-'Control'
+#freq.control.col<-'quant_reading'
 
 if(!file.exists(inp.loc)) {
   errQuit("Input ASV table does not exist.")

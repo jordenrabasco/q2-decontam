@@ -1,9 +1,8 @@
 import qiime2
 import pandas as pd
-from q2_decontam import ScoreTableFormat
+from q2_decontam import ScoreTableFormat, SummaryTableFormat
 from q2_decontam.plugin_setup import plugin
 import collections
-import numpy as np
 
 
 _score_table_header = collections.OrderedDict([
@@ -19,10 +18,8 @@ def _dataframe_to_tsv_ScoreTable_format(df):
     ff = ScoreTableFormat()
     df.to_csv(str(ff), sep='\t', header=True, index=True)
     return ff
+
 def _ScoreTable_to_df(ff):
-    #df = pd.read_csv(str(ff), sep='\t', index_col=0,
-    #                 names=_score_table_header.keys(),
-    #                dtype=_score_table_header)
     temp_meta = qiime2.Metadata.load(str(ff))
     df = temp_meta.to_dataframe()
     return df
@@ -47,3 +44,4 @@ def _3(df: pd.DataFrame) -> ScoreTableFormat:
 @plugin.register_transformer
 def _4(ff: ScoreTableFormat) -> pd.DataFrame:
     return _ScoreTable_to_df(ff)
+

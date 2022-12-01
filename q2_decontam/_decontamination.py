@@ -57,7 +57,7 @@ def _check_featureless_table(fp):
 
 
 _WHOLE_NUM = (lambda x: x >= 0, 'non-negative')
-_NAT_NUM = (lambda x: x > 0, 'greater than zero')
+_PER_NUM = (lambda x: 1 >= x >= 0, 'between 0 and 1')
 _COL_STR = (lambda x: x in { 'column_name', 'column_number'},
              'sample_name or column_name or column_number')
 _DECON_METHOD_STR = (lambda x: x in {'frequency', 'prevalence', 'combined'},
@@ -66,11 +66,12 @@ _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
 # Better to choose to skip, than to implicitly ignore things that KeyError
 _SKIP = (lambda x: True, '')
 _valid_inputs = {
-    'm_control_file': _SKIP,
-    'threshold': _NAT_NUM,
+    'meta_data': _SKIP,
+    'threshold': _PER_NUM,
     'decon_method': _DECON_METHOD_STR,
-    'control_column_id': _SKIP,
-    'control_sample_indicator': _SKIP,
+    'freq_concentration_column': _SKIP,
+    'prev_control_or_exp_sample_column': _SKIP,
+    'prev_control_sample_indicator': _SKIP,
 }
 
 
@@ -91,7 +92,7 @@ def _filepath_to_sample(fp):
 # the bulk of the functionality to this helper util. Typechecking is assumed
 # to have occurred in the calling functions, this is primarily for making
 # sure that DADA2 is able to do what it needs to do.
-def _identify_helper(track_fp):
+def _identify_helper(track_fp, summary_fp):
 
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
     df.index.name = '#OTU ID'
@@ -104,12 +105,15 @@ def _identify_helper(track_fp):
 
     metadata = transform(df, from_type=pd.DataFrame, to_type=ScoreTableFormat)
 
-    return metadata
+    sum_df = pd.read_csv(summary_fp, sep='\t', index_col=0)
+    sum_meta=transform(sum_df, from_type=pd.DataFrame, to_type=ScoreTableFormat)
+
+    return metadata, sum_meta
 
 
 def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_method: str='prevalence', threshold: float=0.1,
              freq_concentration_column: str = 'NULL',prev_control_or_exp_sample_column: str = 'NULL', prev_control_sample_indicator: str='NULL'
-                   ) -> (ScoreTableFormat):
+                   ) -> (ScoreTableFormat, ScoreTableFormat):
     #_check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
         summary_fp = os.path.join(temp_dir_name, 'output.tsv.biom')
@@ -142,5 +146,5 @@ def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_m
                 raise Exception("An error was encountered while running Decontam"
                                     " in R (return code %d), please inspect stdout"
                                     " and stderr to learn more." % e.returncode)
-        return _identify_helper(track_fp)
+        return _identify_helper(track_fp, summary_fp)
 
