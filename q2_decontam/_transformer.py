@@ -1,6 +1,6 @@
 import qiime2
 import pandas as pd
-from q2_decontam import ScoreTableFormat, SummaryTableFormat
+from q2_decontam import ScoreTableFormat
 from q2_decontam.plugin_setup import plugin
 import collections
 

@@ -41,8 +41,7 @@ plugin.methods.register_function(
                 'freq_concentration_column': qiime2.plugin.Str,
                 'prev_control_or_exp_sample_column': qiime2.plugin.Str,
                 'prev_control_sample_indicator': qiime2.plugin.Str,},
-    outputs=[('score_table', FeatureData[ScoreTable]),
-             ('summary_table', FeatureData[ScoreTable])],
+    outputs=[('score_table', FeatureData[ScoreTable])],
     input_descriptions={
         'asv_or_otu_table': ('Table with presence counts in the matrix '
                              'rownames are sample id and column names are'
@@ -60,8 +59,7 @@ plugin.methods.register_function(
         'prev_control_sample_indicator': ('indicate the control sample identifier')
     },
     output_descriptions={
-        'score_table': ('The resulting table of scores from the input ASV table'),
-        'summary_table': ('The resulting a summary table from the decontam output')
+        'score_table': ('The resulting table of scores from the input ASV table')
 
     },
     name='Identify contaminants via the prevelance method',

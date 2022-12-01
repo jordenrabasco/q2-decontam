@@ -92,12 +92,16 @@ def _filepath_to_sample(fp):
 # the bulk of the functionality to this helper util. Typechecking is assumed
 # to have occurred in the calling functions, this is primarily for making
 # sure that DADA2 is able to do what it needs to do.
-def _identify_helper(track_fp, summary_fp):
+def _identify_helper(track_fp, decon_method):
 
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
     df.index.name = '#OTU ID'
     #removes last column containing true/false information from the dataframe
     df=df.drop(df.columns[[(len(df.columns)-1)]], axis=1)
+
+    if(decon_method=='combined'):
+        df = df.fillna(0)
+
     #removes all columns that are completely empty
     temp_transposed_table = df.transpose()
     temp_transposed_table = temp_transposed_table.dropna()
@@ -105,18 +109,13 @@ def _identify_helper(track_fp, summary_fp):
 
     metadata = transform(df, from_type=pd.DataFrame, to_type=ScoreTableFormat)
 
-    sum_df = pd.read_csv(summary_fp, sep='\t', index_col=0)
-    sum_meta=transform(sum_df, from_type=pd.DataFrame, to_type=ScoreTableFormat)
-
-    return metadata, sum_meta
-
+    return metadata
 
 def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_method: str='prevalence', threshold: float=0.1,
              freq_concentration_column: str = 'NULL',prev_control_or_exp_sample_column: str = 'NULL', prev_control_sample_indicator: str='NULL'
-                   ) -> (ScoreTableFormat, ScoreTableFormat):
+                   ) -> (ScoreTableFormat):
     #_check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
-        summary_fp = os.path.join(temp_dir_name, 'output.tsv.biom')
         track_fp = os.path.join(temp_dir_name,'track.tsv')
         ASV_dest = os.path.join(temp_dir_name,'temp_ASV_table.csv')
         transposed_table =  asv_or_otu_table.transpose()
@@ -130,7 +129,6 @@ def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_m
                    '--asv_table_path', str(ASV_dest),
                    '--threshold', str(threshold),
                    '--decon_method', decon_method,
-                   '--output_summary_path', summary_fp,
                    '--output_track', track_fp,
                    '--meta_table_path', str(meta_dest),
                    '--freq_con_column', str(freq_concentration_column),
@@ -146,5 +144,5 @@ def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_m
                 raise Exception("An error was encountered while running Decontam"
                                     " in R (return code %d), please inspect stdout"
                                     " and stderr to learn more." % e.returncode)
-        return _identify_helper(track_fp, summary_fp)
+        return _identify_helper(track_fp, decon_method)
 

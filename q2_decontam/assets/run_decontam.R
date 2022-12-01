@@ -15,8 +15,6 @@ option_list = list(
               help="threshold value for decontam algorithm"),
   make_option(c("--decon_method"), action="store", default='NULL', type='character',
               help="algoithm mode"),
-  make_option(c("--output_summary_path"), action="store", default='NULL', type='character',
-              help="File path to output tsv file. If already exists, will be overwritten"),
   make_option(c("--output_track"), action="store", default='NULL', type='character',
               help="File path to tracking tsv file. If already exists, will be overwritten"),
   make_option(c("--meta_table_path"), action="store", default='NULL', type='character',
@@ -36,7 +34,6 @@ opt = parse_args(OptionParser(option_list=option_list))
 # Assign each of the arguments, in positional order, to an appropriately named R variable
 
 inp.loc <- opt$asv_table_path
-out.path <- opt$output_summary_path
 threshold <- if(opt$threshold=='NULL') NULL else as.numeric(opt$threshold)
 out.track <- opt$output_track
 metadata.loc<-opt$meta_table_path
@@ -83,11 +80,7 @@ outputer<-function(decon_output, out.track,asv_df, out.path){
   write.table(decon_output, out.track, sep="\t",
               row.names=TRUE, col.names=NA, quote=FALSE)
   
-  summary_df <- as.data.frame.matrix(summary(decon_output)) 
-  write.table(summary_df, out.path, sep="\t",
-              row.names=TRUE, col.names=NA, quote=FALSE)
-  
-  #q(status=0)
+  q(status=0)
 }
 
 asv_df <- read.csv(file = inp.loc)
@@ -102,14 +95,14 @@ if(decon.mode == 'prevalence'){
   true_false_control_vec<-grepl(prev.id.controls,control_vec)
   # Prevalence-based contaminant classification
   prev_contam <- isContaminant(numero_df, neg=true_false_control_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='prevalence')
-  outputer(prev_contam, out.track,asv_df, out.path)
+  outputer(prev_contam, out.track,asv_df)
 }else if(decon.mode == 'frequency'){
   control_vec <- meta_data_cols(metadata_df, freq.control.col)
   #genretates numeric vector for contamination analysis
   quant_vec<-as.numeric(control_vec)
   # Prevalence-based contaminant classification
   freq_contam <- isContaminant(numero_df, conc=quant_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='frequency')
-  outputer(freq_contam, out.track,asv_df, out.path)
+  outputer(freq_contam, out.track,asv_df)
 }else{
   prev_control_vec <- meta_data_cols(metadata_df, prev.control.col)
   quant_control_vec <- meta_data_cols(metadata_df, freq.control.col)
@@ -118,7 +111,7 @@ if(decon.mode == 'prevalence'){
   true_false_control_vec<-grepl(prev.id.controls, prev_control_vec)
   
   comb_contam <- isContaminant(numero_df, neg=true_false_control_vec, conc=quant_vec, threshold=threshold, detailed=TRUE, normalize=TRUE, method='combined')
-  outputer(comb_contam, out.track,asv_df, out.path)
+  outputer(comb_contam, out.track,asv_df)
 }
 
 
