@@ -62,11 +62,34 @@ plugin.methods.register_function(
         'score_table': ('The resulting table of scores from the input ASV table')
 
     },
-    name='Identify contaminants via the prevelance method',
+    name='Identify contaminants',
     description=('This method identifies contaminant sequences from an '
                  'OTU or ASV table and reports them to the user')
 )
 
+plugin.methods.register_function(
+    function=q2_decontam.remove,
+    inputs={'decon_identify_table': FeatureData[ScoreTable],
+            'asv_or_otu_table': FeatureTable[Frequency]},
+    parameters={'threshold': qiime2.plugin.Float},
+    outputs=[('no_contaminant_asv_table', FeatureTable[Frequency])],
+    input_descriptions={
+        'decon_identify_table': ('Output table from decontam identify'),
+        'asv_or_otu_table': ('Table with presence counts in the matrix '
+                             'rownames are sample id and column names are'
+                             'seqeunce id')
+    },
+    parameter_descriptions={
+        'threshold': ('Select threshold cutoff for decontam algorithm scores')
+    },
+    output_descriptions={
+        'no_contaminant_asv_table': ('The resulting table of scores once contaminants are removed')
+
+    },
+    name='Removes contaminant',
+    description=('This method identifies contaminant sequences from an '
+                 'OTU or ASV table and reports them to the user')
+)
 
 
 

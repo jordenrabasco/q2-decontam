@@ -146,3 +146,19 @@ def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_m
                                     " and stderr to learn more." % e.returncode)
         return _identify_helper(track_fp, decon_method)
 
+def remove(decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame, threshold: float=0.1,
+                   ) -> (biom.Table):
+    with tempfile.TemporaryDirectory() as temp_dir_name:
+        df = decon_identify_table.to_dataframe()
+        df.loc[(df['p'].astype(float) <= threshold), 'contaminant_seq'] = 'True'
+        df.loc[(df['p'].astype(float) > threshold), 'contaminant_seq'] = 'False'
+        df = df[df.contaminant_seq == 'True']
+        remove_these = df.index
+        for bad_seq in list(remove_these):
+            asv_or_otu_table = asv_or_otu_table[asv_or_otu_table.index != bad_seq]
+        output = os.path.join(temp_dir_name, 'temp.tsv.biom')
+        asv_or_otu_table.to_csv(output, sep="\t")
+        with open(output) as fh:
+            no_contam_table = biom.Table.from_tsv(fh, None, None, None)
+        return no_contam_table
+

@@ -22,7 +22,7 @@ from q2_types.per_sample_sequences import (
 from q2_decontam._stats import ScoreTable, ScoreTableDirFmt, ScoreTableFormat
 from qiime2.plugin.util import transform
 
-from q2_decontam import identify
+from q2_decontam import identify, remove
 from q2_decontam._decontamination import _check_featureless_table
 
 
@@ -31,7 +31,7 @@ def _sort_feature_index(df):
     return temp_sorted_df
 
 
-class TestPrevalenceIdentify(TestPluginBase):
+class TestIdentify(TestPluginBase):
     package = 'q2_decontam.tests'
 
     def setUp(self):
@@ -118,7 +118,34 @@ class TestPrevalenceIdentify(TestPluginBase):
 
             self.assertEqual(test_table,expecter_table)
 
+class TestRemove(TestPluginBase):
+    package = 'q2_decontam.tests'
 
+    def setUp(self):
+        super().setUp()
+        table = qiime2.Artifact.load(self.get_data_path('expected/decon_default_ASV_table.qza'))
+        self.asv_table = table.view(qiime2.Metadata).to_dataframe()
+
+        id_table = qiime2.Artifact.load(self.get_data_path('expected/decon_default_score_table.qza'))
+        self.identify_table = id_table.view(qiime2.Metadata)
+    def test_remove(self):
+
+        exp_table = pd.read_csv(self.get_data_path('expected/no-contaminant-asv-table.tsv'), sep='\t', index_col=0)
+        output_asv_table = remove(asv_or_otu_table=self.asv_table, decon_identify_table=self.identify_table,
+                                      threshold=0.1)
+        temp_table = output_asv_table.to_dataframe()
+        temp_table = temp_table.transpose()
+
+        with tempfile.TemporaryDirectory() as temp_dir_name:
+            test_biom_fp = os.path.join(temp_dir_name, 'test_output.tsv')
+            expected_biom_fp = os.path.join(temp_dir_name, 'expected_output.tsv')
+            temp_table.to_csv(test_biom_fp, sep="\t")
+            exp_table.to_csv(expected_biom_fp, sep="\t")
+            with open(test_biom_fp) as fh:
+                test_table = biom.Table.from_tsv(fh, None, None, None)
+            with open(expected_biom_fp) as th:
+                expecter_table = biom.Table.from_tsv(th, None, None, None)
+            self.assertEqual(test_table, expecter_table)
 
 if __name__ == '__main__':
     unittest.main()
