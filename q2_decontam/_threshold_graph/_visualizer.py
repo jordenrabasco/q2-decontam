@@ -15,6 +15,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import qiime2
+import q2_decontam
 
 
 TEMPLATES = pkg_resources.resource_filename('q2_decontam._threshold_graph',
@@ -169,6 +170,24 @@ def heatmap(output_dir, table: pd.DataFrame,
     q2templates.render(index_fp, output_dir, context={'normalize': normalize})
 
 
-def graph(output_dir, table: pd.DataFrame, metadata: qiime2.Metadata):
-    print("place holder")
+def graph(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame, threshold: float=0.1):
+    df = decon_identify_table.to_dataframe()
+    df.loc[(df['p'].astype(float) <= threshold), 'contaminant_seq'] = 'True'
+    df.loc[(df['p'].astype(float) > threshold), 'contaminant_seq'] = 'False'
+    df = df[df.contaminant_seq == 'True']
+    remove_these = df.index
+    for bad_seq in list(remove_these):
+        asv_or_otu_table = asv_or_otu_table[asv_or_otu_table.index != bad_seq]
+
+    values = df['p'].tolist()
+    num_bins = 6
+    #plt.hist(values, num_bins, facecolor='blue', alpha=0.5)
+    fig = plt.figure()
+    ax1 = fig.add_subplot(1, 1, 1)
+    ax1.hist(values)
+    for ext in ['png', 'svg']:
+        img_fp = os.path.join(output_dir, 'identify-table-histogram.%s' % ext)
+        plt.savefig(img_fp)
+    index_fp = os.path.join(TEMPLATES, 'index.html')
+    q2templates.render(index_fp, output_dir, context={'normalize': True})
 

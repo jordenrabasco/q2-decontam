@@ -103,24 +103,20 @@ plugin.methods.register_function(
 plugin.visualizers.register_function(
     function=q2_decontam.graph,
     inputs={
-        'table': FeatureTable[Frequency]
+        'decon_identify_table': FeatureData[ScoreTable],
+            'asv_or_otu_table': FeatureTable[Frequency]
     },
     parameters={
-        'metadata': Metadata,
+        'threshold':  qiime2.plugin.Float,
     },
-    name='Generate a heatmap representation of a feature table',
-    description='Generate a heatmap representation of a feature table with '
-                'optional clustering on both the sample and feature axes.\n\n'
-                'Tip: To generate a heatmap containing taxonomic annotations, '
-                'use `qiime taxa collapse` to collapse the feature table at '
-                'the desired taxonomic level.',
+    name='Generate a histogram representation of the scores',
+    description='Creates histogram based on the output of decontam identify',
     input_descriptions={
-        'table': 'The feature table to visualize.'
+        'decon_identify_table': 'Output from decontam identify to be vizualized',
+        'asv_or_otu_table': 'Raw OTU/ASV table that was used as input to identify'
     },
     parameter_descriptions={
-        'metadata': 'Annotate the sample IDs with these metadata values. '
-                    'When metadata is present and `cluster`=\'feature\', '
-                    'samples will be sorted by the metadata values.',
+        'threshold': ('Select threshold cutoff for decontam algorithm scores')
     }
 )
 
