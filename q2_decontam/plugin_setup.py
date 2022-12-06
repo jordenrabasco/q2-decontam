@@ -101,7 +101,7 @@ plugin.methods.register_function(
 
 
 plugin.visualizers.register_function(
-    function=q2_decontam.graph,
+    function=q2_decontam.score_viz,
     inputs={
         'decon_identify_table': FeatureData[ScoreTable],
             'asv_or_otu_table': FeatureTable[Frequency]

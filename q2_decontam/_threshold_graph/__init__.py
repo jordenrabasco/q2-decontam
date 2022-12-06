@@ -6,6 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._visualizer import graph, graph_choices
+from ._visualizer import score_viz
 
-__all__ = ['graph', 'graph_choices']
+__all__ = ['score_viz']
