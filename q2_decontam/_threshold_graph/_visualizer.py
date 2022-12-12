@@ -70,7 +70,7 @@ def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_tabl
         else:
             true_asvs = true_asvs + 1
 
-    percent_asvs = float(contam_asvs)/float((contam_asvs+true_asvs))
+    percent_asvs = round((100*float(contam_asvs)/float((contam_asvs+true_asvs))),2)
 
 
 
