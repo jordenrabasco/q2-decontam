@@ -111,7 +111,7 @@ def _identify_helper(track_fp, decon_method):
 
     return metadata
 
-def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_method: str='prevalence', threshold: float=0.1,
+def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_method: str='prevalence',
              freq_concentration_column: str = 'NULL',prev_control_or_exp_sample_column: str = 'NULL', prev_control_sample_indicator: str='NULL'
                    ) -> (ScoreTableFormat):
     #_check_inputs(**locals())
@@ -127,7 +127,7 @@ def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_m
 
         cmd = ['run_decontam.R',
                    '--asv_table_path', str(ASV_dest),
-                   '--threshold', str(threshold),
+                   '--threshold', str(0.1),
                    '--decon_method', decon_method,
                    '--output_track', track_fp,
                    '--meta_table_path', str(meta_dest),

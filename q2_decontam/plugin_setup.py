@@ -23,7 +23,7 @@ _DECON_METHOD_OPT = {'frequency', 'prevalence', 'combined'}
 plugin = qiime2.plugin.Plugin(
     name='decontam',
     version=q2_decontam.__version__,
-    website='http://benjjneb.github.io/decontam/',
+    website='https://github.com/jordenrabasco/q2-decontam',
     package='q2_decontam',
     description=('Identify and/or removes contamination sequences from a seq by sample table'),
     short_description='Plugin for removal of contamination sequences',
@@ -35,7 +35,6 @@ plugin.methods.register_function(
     function=q2_decontam.identify,
     inputs={'asv_or_otu_table': FeatureTable[Frequency]},
     parameters={ 'meta_data': Metadata,
-                 'threshold': qiime2.plugin.Float,
                 'decon_method': qiime2.plugin.Str %
                 qiime2.plugin.Choices(_DECON_METHOD_OPT),
                 'freq_concentration_column': qiime2.plugin.Str,
@@ -53,7 +52,6 @@ plugin.methods.register_function(
                            'assumes sample names in file correspond '
                            'to ASV_or_OTU_table'),
         'decon_method': ('Select how to which method to id contaminants with'),
-        'threshold': ('Select threshold cutoff for decontam algorithm scores'),
         'freq_concentration_column': ('Input column name that has concentration information for the samples'),
         'prev_control_or_exp_sample_column': ('Input column name containing experimental or control sample metadata'),
         'prev_control_sample_indicator': ('indicate the control sample identifier')

@@ -50,10 +50,33 @@ def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_tabl
     by_label = dict(zip(labels, handles))
     plt.legend(by_label.values(), by_label.keys(), loc="upper left", framealpha=1)
 
+    # Add a table at the bottom of the axes
+    #cell_text = [[1,2,3]]
+    #rows = ["test"]
+    #columns = ('Contaminant ASVs', 'True ASVs', '% Contaminant')
+    #plt.table(cellText=cell_text,
+    #                colLabels=columns,
+    #                cellLoc = 'center', rowLoc = 'center',
+    #                loc='bottom', bbox=[0.25, -0.3, 0.3, 0.3])
+
+    # Adjust layout to make room for the table:
+    #plt.subplots_adjust(left=0.4, bottom=0.4)
+
+    contam_asvs = 0
+    true_asvs = 0
+    for val in values:
+        if val < threshold:
+            contam_asvs = contam_asvs + 1
+        else:
+            true_asvs = true_asvs + 1
+
+    percent_asvs = float(contam_asvs)/float((contam_asvs+true_asvs))
+
+
 
     for ext in ['png', 'svg']:
         img_fp = os.path.join(output_dir, 'identify-table-histogram.%s' % ext)
         plt.savefig(img_fp)
     index_fp = os.path.join(TEMPLATES, 'index.html')
-    q2templates.render(index_fp, output_dir, context={'thresholded': str(threshold)})
+    q2templates.render(index_fp, output_dir, context={'contamer': str(contam_asvs), 'truer': str(true_asvs), 'percenter': str(percent_asvs)})
 

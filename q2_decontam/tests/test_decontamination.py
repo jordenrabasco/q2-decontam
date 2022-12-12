@@ -47,7 +47,7 @@ class TestIdentify(TestPluginBase):
         temp_transposed_table=temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
         output_feature_table = identify(asv_or_otu_table=self.asv_table, meta_data=self.metadata_input,
-                                        decon_method='prevalence', threshold=0.1,
+                                        decon_method='prevalence',
                                         prev_control_or_exp_sample_column='Sample_or_ConTrol',
                                         prev_control_sample_indicator='Control')
         df_output_feature_table = transform(output_feature_table, from_type=ScoreTableFormat, to_type=pd.DataFrame)
@@ -73,7 +73,7 @@ class TestIdentify(TestPluginBase):
         temp_transposed_table=temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
         output_feature_table = identify(asv_or_otu_table=self.asv_table, meta_data=self.metadata_input,
-                                        decon_method='frequency', threshold=0.1,
+                                        decon_method='frequency',
                                         freq_concentration_column='quant_reading')
         df_output_feature_table = transform(output_feature_table, from_type=ScoreTableFormat, to_type=pd.DataFrame)
         df_output_feature_table=df_output_feature_table.round(decimals=6)
@@ -98,7 +98,7 @@ class TestIdentify(TestPluginBase):
         temp_transposed_table=temp_transposed_table.dropna()
         exp_table = temp_transposed_table.transpose()
         output_feature_table = identify(asv_or_otu_table=self.asv_table, meta_data=self.metadata_input,
-                                        decon_method='combined', threshold=0.1,
+                                        decon_method='combined',
                                         prev_control_or_exp_sample_column='Sample_or_ConTrol',
                                         prev_control_sample_indicator='Control',
                                         freq_concentration_column='quant_reading')
