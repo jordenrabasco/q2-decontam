@@ -16,67 +16,81 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import qiime2
 import q2_decontam
+from itertools import repeat
 
+_BOOLEAN = (lambda x: type(x) is bool, 'True or False')
 
 TEMPLATES = pkg_resources.resource_filename('q2_decontam._threshold_graph',
                                             'assets')
-def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame, threshold: float=0.1):
+def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame, threshold: float=0.1, weighted: bool=True):
+
 
     df = decon_identify_table.to_dataframe()
     values = df['p'].tolist()
-    plt.xlim(0.0, 1.0)
-    plt.xlabel('score value')
-    plt.ylabel('number of ASVs')
-
     values = np.array(values)
-    discreetlevel=10
+    temp = asv_or_otu_table.sum(axis='columns')
+    read_nums = np.array(temp.tolist())
 
     # Manually create `discreetlevel` bins anchored to  `threshold`
-    binsAbove = round(discreetlevel * np.count_nonzero(values  > threshold) / values.size)
-    binsBelow = discreetlevel - binsAbove
-    binwidth = max((values.max() - threshold) / binsAbove,
-                   (threshold - values.min()) / binsBelow)
-    bins = np.concatenate([
-        np.arange(threshold - binsBelow * binwidth, threshold, binwidth),
-        np.arange(threshold, threshold + (binsAbove + 0.5) * binwidth, binwidth)
-    ])
+    contam_asvs = 0
+    true_asvs = 0
+    contam_reads = 0
+    true_reads = 0
+    index = 0
+    for val in values:
+        if val < threshold:
+            contam_asvs = contam_asvs + 1
+            contam_reads = contam_reads + read_nums[index]
+        else:
+            true_asvs = true_asvs + 1
+            true_reads = true_reads + read_nums[index]
+        index = index + 1
 
-    h, bins, patches = plt.hist(values, bins)
-    plt.setp([p for p, b in zip(patches, bins) if b < threshold], color='r', edgecolor="white", label="Contaminant ASVs")
-    plt.setp([p for p, b in zip(patches, bins) if b >= threshold], color='b', edgecolor="white", label="True ASVs")
+
+    binwidth = 0.02
+    bin_diff = threshold % binwidth
+    bin_corr = binwidth - bin_diff
+    bins = np.concatenate([
+        np.arange((0.0-binwidth), threshold, binwidth), np.arange(threshold, (threshold+bin_corr), binwidth),
+        np.arange((threshold+bin_corr), (1.0+binwidth), binwidth)
+    ])
+    if(weighted == True):
+        y_lab = 'Number of Reads'
+        blue_lab = "True Reads"
+        red_lab = "Contaminant Reads"
+        h, bins, patches = plt.hist(values, bins, weights=np.array(temp.tolist()))
+
+    else:
+        y_lab = 'number of ASVs'
+        blue_lab = "True ASVs"
+        red_lab = "Contaminant ASVs"
+        h, bins, patches = plt.hist(values, bins)
+
+    plt.xlim(0.0, 1.0)
+    plt.xlabel('score value')
+    plt.ylabel(y_lab)
+
+    plt.setp([p for p, b in zip(patches, bins) if b < threshold], color='r', edgecolor="white", label=red_lab)
+    plt.setp([p for p, b in zip(patches, bins) if b >= threshold], color='b', edgecolor="white", label=blue_lab)
     plt.axvline(threshold, ymin=-.1,ymax=1.1 ,color='k', linestyle='dashed', linewidth=1, label="Threshold")
 
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
     plt.legend(by_label.values(), by_label.keys(), loc="upper left", framealpha=1)
 
-    # Add a table at the bottom of the axes
-    #cell_text = [[1,2,3]]
-    #rows = ["test"]
-    #columns = ('Contaminant ASVs', 'True ASVs', '% Contaminant')
-    #plt.table(cellText=cell_text,
-    #                colLabels=columns,
-    #                cellLoc = 'center', rowLoc = 'center',
-    #                loc='bottom', bbox=[0.25, -0.3, 0.3, 0.3])
 
-    # Adjust layout to make room for the table:
-    #plt.subplots_adjust(left=0.4, bottom=0.4)
-
-    contam_asvs = 0
-    true_asvs = 0
-    for val in values:
-        if val < threshold:
-            contam_asvs = contam_asvs + 1
-        else:
-            true_asvs = true_asvs + 1
-
+    percent_reads = round((100*float(contam_reads)/float((contam_reads+true_reads))),2)
     percent_asvs = round((100*float(contam_asvs)/float((contam_asvs+true_asvs))),2)
-
-
 
     for ext in ['png', 'svg']:
         img_fp = os.path.join(output_dir, 'identify-table-histogram.%s' % ext)
         plt.savefig(img_fp)
     index_fp = os.path.join(TEMPLATES, 'index.html')
-    q2templates.render(index_fp, output_dir, context={'contamer': str(contam_asvs), 'truer': str(true_asvs), 'percenter': str(percent_asvs)})
+
+    if (weighted == True):
+        q2templates.render(index_fp, output_dir, context={'contamer': str(int(contam_reads)), 'truer': str(int(true_reads)), 'percenter': str(percent_reads),
+                                                          'contam_label': str(red_lab), 'true_label': str(blue_lab)})
+    else:
+        q2templates.render(index_fp, output_dir, context={'contamer': str(contam_asvs), 'truer': str(true_asvs), 'percenter': str(percent_asvs),
+                                                          'contam_label': str(red_lab), 'true_label': str(blue_lab)})
 

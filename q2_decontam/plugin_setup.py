@@ -106,6 +106,7 @@ plugin.visualizers.register_function(
     },
     parameters={
         'threshold':  qiime2.plugin.Float,
+        'weighted': qiime2.plugin.Bool
     },
     name='Generate a histogram representation of the scores',
     description='Creates histogram based on the output of decontam identify',
@@ -114,7 +115,8 @@ plugin.visualizers.register_function(
         'asv_or_otu_table': 'Raw OTU/ASV table that was used as input to identify'
     },
     parameter_descriptions={
-        'threshold': ('Select threshold cutoff for decontam algorithm scores')
+        'threshold': ('Select threshold cutoff for decontam algorithm scores'),
+        'weighted': ('weight the decontam scores by their assoicated read number')
     }
 )
 
