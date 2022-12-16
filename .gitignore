@@ -65,7 +65,6 @@ target/
 .*.swp
 
 # qiime
-*.qza
 *.qzv
 
 .DS_Store

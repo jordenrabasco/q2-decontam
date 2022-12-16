@@ -90,14 +90,6 @@ plugin.methods.register_function(
 )
 
 
-
-
-
-
-
-
-
-
 plugin.visualizers.register_function(
     function=q2_decontam.score_viz,
     inputs={

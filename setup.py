@@ -26,7 +26,8 @@ setup(
         'q2_decontam': ['citations.bib'],
         'q2_decontam._threshold_graph': ['assets/index.html'],
         'q2_decontam.tests': ['data/*',
-                           'data/expected/*']
+                           'data/expected/*',
+                              'data/tutorial_data/*']
     },
     entry_points={
         "qiime2.plugins":
