@@ -34,7 +34,7 @@ This plugin has 3 actions identify, score-viz, and remove, which are designed to
 
 Examples of Commands:
 
-Example data used in the commands below, sourced from the decontam oral contamination vignette, can be found in the downloaded repo in the data folder at ~/q2-decontam/q2_decontam/tests/data/
+Example data used in the commands below, sourced from the decontam oral contamination vignette, can be found in the downloaded repo in the data folder at ~/q2-decontam/q2_decontam/tests/data/tutorial_data/
 1)  qiime decontam identify --i-asv-or-otu-table feature-table-1.qza --m-meta-data-file test_metadata.tsv --o-score-table score_table.qza --p-freq-concentration-column quant_reading --p-prev-control-or-exp-sample-column Sample_or_ConTrol --p-prev-control-sample-indicator Control  --p-decon-method combined
 2) qiime decontam score-viz --i-decon-identify-table score_table.qza --i-asv-or-otu-table feature-table-1.qza --p-threshold 0.01 --o-visualization vizualize_test.qzv --p-weighted
 3) qiime decontam remove --i-decon-identify-table score_table.qza --i-asv-or-otu-table feature-table-1.qza --p-threshold 0.1 --o-no-contaminant-asv-table no_contam.qza
