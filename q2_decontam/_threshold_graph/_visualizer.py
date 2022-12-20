@@ -22,7 +22,7 @@ _BOOLEAN = (lambda x: type(x) is bool, 'True or False')
 
 TEMPLATES = pkg_resources.resource_filename('q2_decontam._threshold_graph',
                                             'assets')
-def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame, threshold: float=0.1, weighted: bool=True):
+def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame, threshold: float=0.1, weighted: bool=True, bin_size: float=0.02):
 
 
     df = decon_identify_table.to_dataframe()
@@ -46,11 +46,10 @@ def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_tabl
             true_reads = true_reads + read_nums[index]
         index = index + 1
 
-
-    binwidth = 0.02
+    binwidth = bin_size
     bin_diff = threshold % binwidth
     bins = np.concatenate([
-        np.arange(0.0-binwidth, (1.0+binwidth), binwidth)
+        np.arange((0.0-(binwidth*2)), (1.0+(binwidth*2)), binwidth)
     ])
     if(weighted == True):
         y_lab = 'Number of Reads'

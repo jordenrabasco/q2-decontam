@@ -98,7 +98,8 @@ plugin.visualizers.register_function(
     },
     parameters={
         'threshold':  qiime2.plugin.Float,
-        'weighted': qiime2.plugin.Bool
+        'weighted': qiime2.plugin.Bool,
+        'bin_size': qiime2.plugin.Float
     },
     name='Generate a histogram representation of the scores',
     description='Creates histogram based on the output of decontam identify',
@@ -108,7 +109,8 @@ plugin.visualizers.register_function(
     },
     parameter_descriptions={
         'threshold': ('Select threshold cutoff for decontam algorithm scores'),
-        'weighted': ('weight the decontam scores by their assoicated read number')
+        'weighted': ('weight the decontam scores by their assoicated read number'),
+        'bin_size': ('Select bin size for the histogram')
     }
 )
 
