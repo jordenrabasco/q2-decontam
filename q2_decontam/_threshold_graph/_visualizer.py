@@ -69,10 +69,20 @@ def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_tabl
     plt.xlim(0.0, 1.0)
     plt.xlabel('score value')
     plt.ylabel(y_lab)
-    plt.setp([p for p, b in zip(patches, bins) if (b == (threshold - bin_diff)) and (bin_diff != 0)],
-             color='m', edgecolor="white")
-    plt.setp([p for p, b in zip(patches, bins) if b < (threshold - bin_diff)], color='r', edgecolor="white", label=red_lab)
-    plt.setp([p for p, b in zip(patches, bins) if b >= (threshold + bin_corr)], color='b', edgecolor="white", label=blue_lab)
+
+    if bin_diff == 0:
+        plt.setp([p for p, b in zip(patches, bins) if b < (threshold)], color='r', edgecolor="white",
+                 label=red_lab)
+        plt.setp([p for p, b in zip(patches, bins) if b >= (threshold)], color='b', edgecolor="white",
+                 label=blue_lab)
+    else:
+        plt.setp([p for p, b in zip(patches, bins) if b == (threshold - bin_diff)],
+                 color='m', edgecolor="white")
+        plt.setp([p for p, b in zip(patches, bins) if b < (threshold-bin_diff)], color='r', edgecolor="white",
+                 label=red_lab)
+        plt.setp([p for p, b in zip(patches, bins) if b > (threshold)], color='b', edgecolor="white",
+                 label=blue_lab)
+
     plt.axvline(threshold, ymin=-.1,ymax=1.1 ,color='k', linestyle='dashed', linewidth=1, label="Threshold")
 
     handles, labels = plt.gca().get_legend_handles_labels()
