@@ -51,27 +51,29 @@ def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_tabl
     bin_diff = threshold % binwidth
     bin_corr = binwidth - bin_diff
     bins = np.concatenate([
-        np.arange((0.0-binwidth), threshold, binwidth), np.arange(threshold, (threshold+bin_corr), binwidth),
-        np.arange((threshold+bin_corr), (1.0+binwidth), binwidth)
+        np.arange(0.0-binwidth, (1.0+binwidth), binwidth)
     ])
     if(weighted == True):
         y_lab = 'Number of Reads'
         blue_lab = "True Reads"
         red_lab = "Contaminant Reads"
         h, bins, patches = plt.hist(values, bins, weights=np.array(temp.tolist()))
-
+        plt.yscale('log')
     else:
         y_lab = 'number of ASVs'
         blue_lab = "True ASVs"
         red_lab = "Contaminant ASVs"
         h, bins, patches = plt.hist(values, bins)
 
+
+
     plt.xlim(0.0, 1.0)
     plt.xlabel('score value')
     plt.ylabel(y_lab)
-
-    plt.setp([p for p, b in zip(patches, bins) if b < threshold], color='r', edgecolor="white", label=red_lab)
-    plt.setp([p for p, b in zip(patches, bins) if b >= threshold], color='b', edgecolor="white", label=blue_lab)
+    plt.setp([p for p, b in zip(patches, bins) if b >= (threshold - bin_corr) and b < (threshold + bin_corr)],
+             color='m', edgecolor="white")
+    plt.setp([p for p, b in zip(patches, bins) if b < (threshold-bin_corr)], color='r', edgecolor="white", label=red_lab)
+    plt.setp([p for p, b in zip(patches, bins) if b >= (threshold)], color='b', edgecolor="white", label=blue_lab)
     plt.axvline(threshold, ymin=-.1,ymax=1.1 ,color='k', linestyle='dashed', linewidth=1, label="Threshold")
 
     handles, labels = plt.gca().get_legend_handles_labels()
@@ -81,7 +83,7 @@ def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_tabl
 
     percent_reads = round((100*float(contam_reads)/float((contam_reads+true_reads))),2)
     percent_asvs = round((100*float(contam_asvs)/float((contam_asvs+true_asvs))),2)
-
+    #return p
     for ext in ['png', 'svg']:
         img_fp = os.path.join(output_dir, 'identify-table-histogram.%s' % ext)
         plt.savefig(img_fp)

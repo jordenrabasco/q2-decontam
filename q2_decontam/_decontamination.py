@@ -161,4 +161,3 @@ def remove(decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame
         with open(output) as fh:
             no_contam_table = biom.Table.from_tsv(fh, None, None, None)
         return no_contam_table
-
