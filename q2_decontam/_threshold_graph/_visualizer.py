@@ -81,18 +81,18 @@ def score_viz(output_dir, decon_identify_table: qiime2.Metadata, asv_or_otu_tabl
     plt.legend(by_label.values(), by_label.keys(), loc="upper left", framealpha=1)
 
 
-    percent_reads = round((100*float(contam_reads)/float((contam_reads+true_reads))),2)
-    percent_asvs = round((100*float(contam_asvs)/float((contam_asvs+true_asvs))),2)
-    #return p
+    percent_reads = (100*float(contam_reads)/float((contam_reads+true_reads)))
+    percent_asvs = (100*float(contam_asvs)/float((contam_asvs+true_asvs)))
+
     for ext in ['png', 'svg']:
         img_fp = os.path.join(output_dir, 'identify-table-histogram.%s' % ext)
         plt.savefig(img_fp)
     index_fp = os.path.join(TEMPLATES, 'index.html')
 
     if (weighted == True):
-        q2templates.render(index_fp, output_dir, context={'contamer': str(int(contam_reads)), 'truer': str(int(true_reads)), 'percenter': str(percent_reads),
+        q2templates.render(index_fp, output_dir, context={'contamer': str("{:,}".format(int(contam_reads))), 'truer': str("{:,}".format(int(true_reads))), 'percenter': str("%.2f" % percent_reads),
                                                           'contam_label': str(red_lab), 'true_label': str(blue_lab)})
     else:
-        q2templates.render(index_fp, output_dir, context={'contamer': str(contam_asvs), 'truer': str(true_asvs), 'percenter': str(percent_asvs),
+        q2templates.render(index_fp, output_dir, context={'contamer': str("{:,}".format(int(contam_asvs))), 'truer': str("{:,}".format(int(true_asvs))), 'percenter': str("%.2f" % percent_asvs),
                                                           'contam_label': str(red_lab), 'true_label': str(blue_lab)})
 
