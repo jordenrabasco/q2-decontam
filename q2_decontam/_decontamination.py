@@ -157,7 +157,8 @@ def remove(decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame
         for bad_seq in list(remove_these):
             asv_or_otu_table = asv_or_otu_table[asv_or_otu_table.index != bad_seq]
         output = os.path.join(temp_dir_name, 'temp.tsv.biom')
-        asv_or_otu_table.to_csv(output, sep="\t")
+        temp_transposed_table = asv_or_otu_table.transpose()
+        temp_transposed_table.to_csv(output, sep="\t")
         with open(output) as fh:
             no_contam_table = biom.Table.from_tsv(fh, None, None, None)
         return no_contam_table
