@@ -6,6 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._visualizer import score_viz
+from ._visualizer import decontam_score_viz
 
-__all__ = ['score_viz']
+__all__ = ['decontam_score_viz']

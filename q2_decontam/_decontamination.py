@@ -14,7 +14,7 @@ import tempfile
 import hashlib
 import subprocess
 from qiime2.plugin.util import transform
-from ._stats import ScoreTable, ScoreTableDirFmt, ScoreTableFormat
+from ._stats import DecontamScore, DecontamScoreDirFmt, DecontamScoreFormat
 
 import biom
 import skbio
@@ -92,7 +92,7 @@ def _filepath_to_sample(fp):
 # the bulk of the functionality to this helper util. Typechecking is assumed
 # to have occurred in the calling functions, this is primarily for making
 # sure that DADA2 is able to do what it needs to do.
-def _identify_helper(track_fp, decon_method):
+def _decontam_identify_helper(track_fp, decon_method):
 
     df = pd.read_csv(track_fp, sep='\t', index_col=0)
     df.index.name = '#OTU ID'
@@ -107,13 +107,13 @@ def _identify_helper(track_fp, decon_method):
     temp_transposed_table = temp_transposed_table.dropna()
     df = temp_transposed_table.transpose()
 
-    metadata = transform(df, from_type=pd.DataFrame, to_type=ScoreTableFormat)
+    metadata = transform(df, from_type=pd.DataFrame, to_type=DecontamScoreFormat)
 
     return metadata
 
-def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_method: str='prevalence',
+def decontam_identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_method: str='prevalence',
              freq_concentration_column: str = 'NULL',prev_control_or_exp_sample_column: str = 'NULL', prev_control_sample_indicator: str='NULL'
-                   ) -> (ScoreTableFormat):
+                   ) -> (DecontamScoreFormat):
     #_check_inputs(**locals())
     with tempfile.TemporaryDirectory() as temp_dir_name:
         track_fp = os.path.join(temp_dir_name,'track.tsv')
@@ -144,9 +144,9 @@ def identify(asv_or_otu_table: pd.DataFrame, meta_data: qiime2.Metadata, decon_m
                 raise Exception("An error was encountered while running Decontam"
                                     " in R (return code %d), please inspect stdout"
                                     " and stderr to learn more." % e.returncode)
-        return _identify_helper(track_fp, decon_method)
+        return _decontam_identify_helper(track_fp, decon_method)
 
-def remove(decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame, threshold: float=0.1,
+def decontam_remove(decon_identify_table: qiime2.Metadata, asv_or_otu_table: pd.DataFrame, threshold: float=0.1,
                    ) -> (biom.Table):
     with tempfile.TemporaryDirectory() as temp_dir_name:
         df = decon_identify_table.to_dataframe()

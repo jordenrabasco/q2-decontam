@@ -12,7 +12,7 @@ import pandas as pd
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
 
-from q2_decontam import ScoreTableFormat
+from q2_decontam import DecontamScoreFormat
 
 
 class TestStatsBoilerplate(TestPluginBase):
@@ -24,13 +24,13 @@ class TestStatsBoilerplate(TestPluginBase):
                      for filename in filenames]
 
         for filepath in filepaths:
-            format = ScoreTableFormat(filepath, mode='r')
+            format = DecontamScoreFormat(filepath, mode='r')
             # Should pass without error
             format.validate()
             self.assertTrue(True)
 
-    def test_score_table_format_to_metadata(self):
-        _, obs = self.transform_format(ScoreTableFormat, qiime2.Metadata,
+    def test_decontam_table_format_to_metadata(self):
+        _, obs = self.transform_format(DecontamScoreFormat, qiime2.Metadata,
                                        os.path.join('expected',
                                                     'score-table-format.tsv'))
 
@@ -45,8 +45,8 @@ class TestStatsBoilerplate(TestPluginBase):
         exp = qiime2.Metadata(exp_df)
         self.assertEqual(exp, obs)
 
-    def test_metadata_to_score_table_format(self):
-        transformer = self.get_transformer(qiime2.Metadata, ScoreTableFormat)
+    def test_metadata_to_decontam_table_format(self):
+        transformer = self.get_transformer(qiime2.Metadata, DecontamScoreFormat)
         index = pd.Index(['Seq1', 'Seq2','Seq3', 'Seq4','Seq5'], name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
         md = pd.DataFrame([[0.323531341965556,549,0.1,1,1],
@@ -59,8 +59,8 @@ class TestStatsBoilerplate(TestPluginBase):
         transformer(md)
         self.assertTrue(True)
 
-    def test_score_table_format_to_df(self):
-        _, obs = self.transform_format(ScoreTableFormat, pd.DataFrame,
+    def test_decontam_table_format_to_df(self):
+        _, obs = self.transform_format(DecontamScoreFormat, pd.DataFrame,
                                        os.path.join('expected',
                                                     'score-table-format.tsv'))
 
@@ -75,8 +75,8 @@ class TestStatsBoilerplate(TestPluginBase):
         exp = exp_df
         self.assertEqual(exp, obs)
 
-    def test_df_to_score_table_format(self):
-        transformer = self.get_transformer(pd.DataFrame, ScoreTableFormat)
+    def test_df_to_decontam_table_format(self):
+        transformer = self.get_transformer(pd.DataFrame, DecontamScoreFormat)
         index = pd.Index(['Seq1', 'Seq2','Seq3', 'Seq4','Seq5'], name='#OTU ID', dtype=object)
         cols = ['freq', 'prev', 'p.freq', 'p.prev', 'p']
         df = pd.DataFrame([[0.323531341965556,549,0.1,1,1],

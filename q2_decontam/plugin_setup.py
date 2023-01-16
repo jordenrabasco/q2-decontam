@@ -16,7 +16,7 @@ from q2_types.feature_data import FeatureData, Sequence
 from q2_types.feature_table import FeatureTable, Frequency
 
 import q2_decontam
-from q2_decontam import ScoreTable, ScoreTableFormat, ScoreTableDirFmt
+from q2_decontam import DecontamScore, DecontamScoreFormat, DecontamScoreDirFmt
 
 _DECON_METHOD_OPT = {'frequency', 'prevalence', 'combined'}
 
@@ -32,7 +32,7 @@ plugin = qiime2.plugin.Plugin(
 
 
 plugin.methods.register_function(
-    function=q2_decontam.identify,
+    function=q2_decontam.decontam_identify,
     inputs={'asv_or_otu_table': FeatureTable[Frequency]},
     parameters={ 'meta_data': Metadata,
                 'decon_method': qiime2.plugin.Str %
@@ -40,7 +40,7 @@ plugin.methods.register_function(
                 'freq_concentration_column': qiime2.plugin.Str,
                 'prev_control_or_exp_sample_column': qiime2.plugin.Str,
                 'prev_control_sample_indicator': qiime2.plugin.Str,},
-    outputs=[('score_table', FeatureData[ScoreTable])],
+    outputs=[('score_table', FeatureData[DecontamScore])],
     input_descriptions={
         'asv_or_otu_table': ('Table with presence counts in the matrix '
                              'rownames are sample id and column names are'
@@ -66,8 +66,8 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_decontam.remove,
-    inputs={'decon_identify_table': FeatureData[ScoreTable],
+    function=q2_decontam.decontam_remove,
+    inputs={'decon_identify_table': FeatureData[DecontamScore],
             'asv_or_otu_table': FeatureTable[Frequency]},
     parameters={'threshold': qiime2.plugin.Float},
     outputs=[('no_contaminant_asv_table', FeatureTable[Frequency])],
@@ -91,9 +91,9 @@ plugin.methods.register_function(
 
 
 plugin.visualizers.register_function(
-    function=q2_decontam.score_viz,
+    function=q2_decontam.decontam_score_viz,
     inputs={
-        'decon_identify_table': FeatureData[ScoreTable],
+        'decon_identify_table': FeatureData[DecontamScore],
             'asv_or_otu_table': FeatureTable[Frequency]
     },
     parameters={
@@ -116,8 +116,8 @@ plugin.visualizers.register_function(
 
 
 
-plugin.register_formats(ScoreTableFormat, ScoreTableDirFmt)
-plugin.register_semantic_types(ScoreTable)
+plugin.register_formats(DecontamScoreFormat, DecontamScoreDirFmt)
+plugin.register_semantic_types(DecontamScore)
 plugin.register_semantic_type_to_format(
-    FeatureData[ScoreTable], ScoreTableDirFmt)
+    FeatureData[DecontamScore], DecontamScoreDirFmt)
 importlib.import_module('q2_decontam._transformer')
